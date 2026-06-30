@@ -1,129 +1,216 @@
-# EnvProbe: When LLM Agents Should Actively Probe the Environment
+<div align="center">
 
-> [paper link placeholder] | [project page placeholder]
+# Grounded Iterative Language Planning: How Parameterized World Models Reduce Hallucination Propagation in LLM Agents
+
+**Xinyuan Song, Zekun Cai**
+
+[![arXiv](https://img.shields.io/badge/arXiv-2606.27806-b31b1b.svg)](https://arxiv.org/abs/2606.27806)
+[![Paper](https://img.shields.io/badge/Paper-PDF-blue.svg)](https://arxiv.org/pdf/2606.27806)
+[![Code](https://img.shields.io/badge/GitHub-Code-black.svg)](https://github.com/Hik289/Environment-reduce-error)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+**Official implementation for "Grounded Iterative Language Planning."**
+
+</div>
+
+---
 
 ## Overview
 
-EnvProbe studies when LLM agents should sacrifice action budget to actively probe environment state for belief calibration. We find a fundamental Pareto trade-off between belief accuracy and task success.
+Language agents often plan by imagining state transitions in natural language.
+When those imagined transitions are wrong, hallucinated state changes can
+propagate through the rest of the plan. This repository provides the experimental
+harness for studying that failure mode on graph-structured planning tasks and
+for evaluating grounded planning strategies that use environment-side signals to
+reduce propagation error.
 
-**Key findings:**
+The paper compares API-based agent world models with parameterized transition
+models, then introduces **Grounded Iterative Language Planning (GILP)**: a hybrid
+planning loop where an LLM proposes actions and imagined deltas while a smaller
+grounded model supplies valid actions, predicted state deltas, risk, and value.
+A consistency gate asks the LLM to revise when the two disagree.
 
-- Probe-action budget is a fundamental constraint in long-horizon tasks where every probe costs one act step.
-- A 4-dimensional probe-target score (criticality + staleness + uncertainty + dependency role) achieves **+11.76 pp** belief-accuracy gain over Periodic-Probe baseline (n=220 per cell, paired bootstrap p < 0.001).
-- Pareto frontier analysis reveals **7 methods are jointly optimal** on procedural (ToolDAGWorld) tasks under the A_H vs task-success objective pair.
-- Spatial-belief tasks (short-chain ObjectStateWorld / GraphNavWorld) show that the **(c + d) two-dimensional variant** is Pareto-dominant.
+In the paper, GILP reduces hallucinated-state rate from **0.176 to 0.035** on
+real GPT-4o-mini calls, and calibrated simulator ablations raise success from
+**0.668 to 0.838** with only about **22%** additional LLM calls.
 
-## Quick Start
+---
 
-```bash
-# 1. Install
-pip install -r requirements.txt
-export OPENAI_API_KEY=...        # Required for LLM agent
-export ANTHROPIC_API_KEY=...     # Optional, for Judge variant
-export ENVPROBE_ROOT=$(pwd)      # Optional, default is repository root
+## Repository Contents
 
-# 2. Smoke test (1 episode, ToolDAGWorld, no probing)
-python -m src.scripts.run_smoke \
-    --env ToolDAGWorld --method no_probe \
-    --stress S2 --n-seeds 1 --prefix smoke
+This public snapshot contains the graph-world evaluation harness, LLM agent
+runner, probing and oracle baselines, scoring code, and reproduction scripts used
+for the grounded planning experiments.
 
-# 3. Anchor regression suite (determinism + oracle self-check)
-python src/scripts/anchor_3_determinism.py
-python src/scripts/anchor_4_oracle_self_check.py
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| Environments | `src/environments/` | Object, graph navigation, and tool-DAG planning worlds. |
+| Agents | `src/agents/` | GPT-style agent prompts, parsing, and API wrappers. |
+| Methods | `src/methods/` | No-probe, periodic, uncertainty, EnvProbe-style, judge, and oracle policies. |
+| Metrics | `src/metrics/` | Belief accuracy, task success, drift, oracle, and aggregate scoring. |
+| Scripts | `src/scripts/` | Smoke tests, anchor checks, main experiment runner, and diagnostics. |
+| Registry | `cells_registry.csv` | Experiment cells for environments, methods, stress settings, and seeds. |
+| Examples | `examples/` | Shell entry points for smoke and paper-scale reproduction runs. |
 
-# 4. Reproduce R3 Stage D main result (n=220, ~3h on a single LLM key)
-python -m src.scripts.run_main \
-    --registry experiments/cells_registry.csv \
-    --layer r3_stage_d --prefix r3_stage_d --parallel 8
-```
+---
 
-## Directory Structure
+## Method Summary
 
-```
-envprobe/
-├── src/
-│   ├── environments/    # 3 worlds: ToolDAGWorld, GraphNavWorld, ObjectStateWorld
-│   ├── methods/         # 9 probe-selection methods + 4 ablation variants
-│   ├── metrics/         # A_H, task_success, drift, oracle
-│   ├── agents/          # LLM agent prompts + parser (R3 fix)
-│   ├── scripts/         # run_main.py, run_smoke.py, anchor_*, verify_floor.py
-│   ├── tests/           # Anchor 1-5 + ToolDAG no-repeat + scoring invariants
-│   └── utils/           # api_client (OpenAI + Anthropic wrappers), io helpers
-├── analysis/            # Statistical pipeline + R3 Stage D stats + Pareto
-├── examples/            # Smoke + paper-reproduction shell scripts
-├── config.yaml          # Default LLM model + budget defaults
-├── requirements.txt
-├── LICENSE
-└── README.md
-```
+GILP-style grounded planning is motivated by a simple observation: pure
+language-world-model rollouts are flexible, but their errors are hard to score;
+parameterized world models are easier to measure with transition losses and
+validity metrics, but are weaker as standalone planners. The hybrid loop keeps
+the LLM in charge of high-level reasoning while grounding each step against
+model-independent environment signals.
 
-## Methods Included
+| Regime | Description |
+|--------|-------------|
+| **Agent world model** | The LLM reasons directly over text observations and imagined state changes. |
+| **Parameterized world model** | A trained transition predictor estimates valid actions, deltas, risk, and value. |
+| **Grounded iterative planning** | The LLM drafts an action/delta, the grounded model checks consistency, and the LLM revises when needed. |
+
+The code exposes several planning and probing baselines that can be used to
+measure hallucination propagation, belief calibration, and task success.
 
 | Method | Description |
-|---|---|
-| `no_probe` | Always act; no probing. |
-| `random_probe` | Each step, probe with prob 1/4 of a random valid probe verb. |
-| `periodic_probe` | Probe every k steps (k = horizon / 4). |
-| `self_uncertainty_probe` | Probe when LLM-reported belief confidence < 0.5. |
-| `envprobe_simple` | 4-dim score: criticality + staleness + (1-conf) + dependency role. |
-| `envprobe_simple_cd` | 2-dim ablation: criticality + dependency role only. |
-| `envprobe_simple_minus_{c,s,u,d}` | Single-dim leave-one-out ablation. |
-| `envprobe_judge` | LLM judge decides probe vs act using belief-vs-action consistency. |
-| `oracle_probe` | Cheats: picks probe targeting largest belief-vs-gold mismatch. Uniform utility. |
-| `oracle_task_weighted` | Improved oracle using task-progress-weighted utility. |
+|--------|-------------|
+| `no_probe` | Always act; never spends budget on checking state. |
+| `random_probe` | Uses a random valid probe with fixed probability. |
+| `periodic_probe` | Probes every fixed interval. |
+| `self_uncertainty_probe` | Probes when the LLM reports low belief confidence. |
+| `envprobe_simple` | Scores probe targets by criticality, staleness, uncertainty, and dependency role. |
+| `envprobe_simple_cd` | Two-dimensional ablation using criticality and dependency role. |
+| `envprobe_simple_minus_{c,s,u,d}` | Leave-one-dimension-out ablations. |
+| `envprobe_judge` | Uses an LLM judge to decide whether to probe or act. |
+| `oracle_probe` | Oracle upper bound based on belief-vs-gold mismatch. |
+| `oracle_task_weighted` | Oracle variant weighted by task progress utility. |
+
+---
 
 ## Environments
 
-| Env | Belief stratum | Task | Horizon |
-|---|---|---|---|
-| `ObjectStateWorld` | spatial | Pick up a goal object in a multi-room locked-door world. | 30 |
-| `GraphNavWorld` | spatial | Navigate from start to goal node on a locked-edge graph. | 30 |
-| `ToolDAGWorld` | procedural | Chain tools t_0 ... t_8 to produce a target variable. | 30 |
+| Environment | Planning structure | Task |
+|-------------|--------------------|------|
+| `ObjectStateWorld` | Spatial object and door state | Pick up a target object in a multi-room world. |
+| `GraphNavWorld` | Locked-edge graph navigation | Navigate from start to goal under partial state information. |
+| `ToolDAGWorld` | Procedural dependency graph | Chain tools to produce a target variable. |
 
-All envs implement the same `Environment` interface in `src/environments/base.py`.
+Each environment implements the common interface in `src/environments/base.py`.
 
-## Reproducing Paper Results
+---
 
-Place the data archive `envprobe_data_v1/` (episode JSONLs + cells_registry) at the repository root, then:
+## Installation
 
 ```bash
-# G1: stratified A_H gain over Periodic (n=220 per cell, paired bootstrap)
-python -m src.scripts.run_main --registry experiments/cells_registry.csv --layer r3_stage_d --prefix r3_stage_d --parallel 8
+git clone git@github.com:Hik289/Environment-reduce-error.git
+cd Environment-reduce-error
 
-# N1 ablation
-python -m src.scripts.run_main --registry experiments/cells_registry.csv --layer r3_stage_d_ablation --prefix r3_stage_d_ablation --parallel 8
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-# Task-weighted Oracle (Cell B)
-python -m src.scripts.run_main --registry experiments/cells_registry.csv --layer r3_stage_d_tw --prefix r3_stage_d_tw --parallel 6
-
-# Final stats (paired bootstrap + McNemar + Bonferroni–Holm)
-python analysis/r3_stage_d_stats.py
-python analysis/r3_render_md.py
+export OPENAI_API_KEY=sk-...        # required for GPT-based agents
+export ANTHROPIC_API_KEY=...        # optional, for Anthropic/Judge variants
+export ENVPROBE_ROOT=$(pwd)         # optional; defaults to repository root
 ```
 
-The final markdown report `analysis/stat_results_r3_final.md` contains all paper numbers.
+The default model in `config.yaml` is `gpt-4o-mini`.
 
-## Extending
+---
 
-- **New environment**: subclass `src.environments.base.Environment`. Implement `reset`, `step_task_action`, `step_probe_action`, `get_observation`, `get_gold_state`, `score_belief_state`, `task_description`, `available_task_actions`, `available_probe_actions`.
-- **New probe method**: subclass `src.methods.base.Method`. Implement `decide(ctx) -> MethodDecision`.
-- **New metric**: extend `src.metrics.scorer.score_step` / `score_episode`.
+## Quickstart
 
-## Notes on the Stage B Agent Fix
+Run a small end-to-end smoke test:
 
-After diagnosing that LLM agents become stuck in single-tool loops on ToolDAGWorld, two changes were made (see `analysis/r3_tooldag_agent_failure_diagnosis.md`):
+```bash
+bash examples/smoke_test.sh
+```
 
-1. `ToolDAGWorld._call_tool` now returns `valid=False` with `reason="already_completed"` when an agent tries to re-call an already-completed tool, providing learning signal.
-2. The system prompt in `src/agents/prompts.py` gained a ToolDAGWorld-specific section guiding the agent to maintain `completed_subgoals` / `open_dependencies` belief fields and to plan backwards from the target variable.
+Or run one explicit cell:
 
-Both changes preserve the anchor_3 hash determinism (120 / 120) and pass anchor_4 oracle self-check.
+```bash
+python -m src.scripts.run_smoke \
+    --env ToolDAGWorld \
+    --method no_probe \
+    --stress S2 \
+    --n-seeds 1 \
+    --prefix smoke
+```
+
+Run deterministic and oracle sanity checks:
+
+```bash
+python src/scripts/anchor_3_determinism.py
+python src/scripts/anchor_4_oracle_self_check.py
+```
+
+---
+
+## Reproducing Experiments
+
+The included registry defines the environment, stress, method, and seed grid:
+
+```bash
+python -m src.scripts.run_main \
+    --registry cells_registry.csv \
+    --layer r3_stage_d \
+    --prefix r3_stage_d \
+    --parallel 8
+```
+
+The example script runs the broader reproduction pipeline:
+
+```bash
+bash examples/reproduce_main.sh
+```
+
+Outputs are written under `experiments/` and `logs/`. Depending on the selected
+layer and API rate limits, full runs may take several hours and incur LLM API
+costs.
+
+---
+
+## Directory Structure
+
+```text
+Environment-reduce-error/
+|-- README.md
+|-- LICENSE
+|-- requirements.txt
+|-- config.yaml
+|-- cells_registry.csv
+|-- examples/
+|   |-- smoke_test.sh
+|   `-- reproduce_main.sh
+`-- src/
+    |-- agents/
+    |-- environments/
+    |-- methods/
+    |-- metrics/
+    |-- scripts/
+    |-- tests/
+    `-- utils/
+```
+
+---
 
 ## Citation
 
+If you use this code, please cite the paper:
+
 ```bibtex
-[BibTeX placeholder — will be added on publication]
+@misc{song2026groundediterativelanguageplanning,
+  title         = {Grounded Iterative Language Planning: How Parameterized World Models Reduce Hallucination Propagation in LLM Agents},
+  author        = {Xinyuan Song and Zekun Cai},
+  year          = {2026},
+  eprint        = {2606.27806},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2606.27806}
+}
 ```
 
 ## License
 
-MIT. See `LICENSE`.
+Released under the [MIT License](LICENSE). Third-party models, APIs, and
+benchmarks used by the experiments are governed by their own licenses and terms.
