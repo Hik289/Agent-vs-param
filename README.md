@@ -7,6 +7,7 @@
 **Xinyuan Song, Zekun Cai**
 
 [![Code](https://img.shields.io/badge/GitHub-Agent--vs--param-black.svg)](https://github.com/Hik289/Agent-vs-param)
+[![Paper](https://img.shields.io/badge/Paper-arXiv%3A2606.27806-b31b1b.svg)](https://arxiv.org/abs/2606.27806)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 Research code and paper artifacts for studying how language-agent world models
@@ -229,11 +230,14 @@ Agent-vs-param/
 If you use this code or figure, please cite:
 
 ```bibtex
-@misc{song2026agentvsparametricworldmodels,
-  title  = {Agent vs. Parametric World Models: Hybrid Planning for Reliable Language Agents},
-  author = {Xinyuan Song and Zekun Cai},
-  year   = {2026},
-  note   = {Manuscript}
+@misc{song2026groundediterativelanguageplanning,
+      title={Grounded Iterative Language Planning: How Parameterized World Models Reduce Hallucination Propagation in LLM Agents}, 
+      author={Xinyuan Song and Zekun Cai},
+      year={2026},
+      eprint={2606.27806},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2606.27806}, 
 }
 ```
 
