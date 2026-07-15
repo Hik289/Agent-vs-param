@@ -6,9 +6,9 @@
 
 **Xinyuan Song, Zekun Cai**
 
-[![Code](https://img.shields.io/badge/GitHub-Agent--vs--param-black.svg)](https://github.com/Hik289/Agent-vs-param)
-[![Paper](https://img.shields.io/badge/Paper-arXiv%3A2606.27806-b31b1b.svg)](https://arxiv.org/abs/2606.27806)
+[![arXiv](https://img.shields.io/badge/arXiv-2606.27806-b31b1b.svg)](https://arxiv.org/abs/2606.27806)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3-3776AB.svg)](https://www.python.org/)
 
 Research code and paper artifacts for studying how language-agent world models
 and parametric world models fail, complement each other, and can be combined.
