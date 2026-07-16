@@ -17,6 +17,12 @@ and parametric world models fail, complement each other, and can be combined.
 
 ---
 
+## At a Glance
+
+- **Research question.** When should an agent rely on an explicit agentic world model rather than a parametric prior during planning?
+- **Core idea.** The repository evaluates hybrid planning regimes that separate task success from world-model faithfulness.
+- **What is included.** Synthetic tasks, probing policies, oracle checks, rollout metrics, and scripts for reproducing the experiment grids.
+
 ## Overview
 
 Language agents do more than choose actions. During planning, they also write
@@ -110,7 +116,7 @@ still writing false state transitions that hurt longer rollouts.
 
 ---
 
-## Repository Contents
+## Repository Structure
 
 This public snapshot contains the graph-world evaluation harness, LLM agent
 runner, baseline policies, scoring utilities, and reproduction scripts used by
@@ -147,7 +153,7 @@ The default model in `config.yaml` is `gpt-4o-mini`.
 
 ---
 
-## Quickstart
+## Quick Start
 
 Run a small end-to-end smoke test:
 
@@ -198,7 +204,7 @@ LLM cost depending on the selected model, registry layer, and rate limits.
 
 ---
 
-## Directory Structure
+## Directory Tree
 
 ```text
 Agent-vs-param/
