@@ -1,19 +1,23 @@
-<div align="center">
+<h1 align="center">Agent vs. Parametric World Models</h1>
 
-# Agent vs. Parametric World Models
+<p align="center">
+  <strong>Hybrid Planning for Reliable Language Agents</strong>
+</p>
 
-### Hybrid Planning for Reliable Language Agents
+<p align="center">
+  <strong>Xinyuan Song, Zekun Cai</strong>
+</p>
 
-**Xinyuan Song, Zekun Cai**
+<p align="center">
+  <a href="https://arxiv.org/abs/2606.27806"><img src="https://img.shields.io/badge/arXiv-2606.27806-b31b1b.svg" alt="arXiv"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT license"></a>
+  <a href="requirements.txt"><img src="https://img.shields.io/badge/Python-3.8%2B-3776AB.svg" alt="Python 3.8+"></a>
+</p>
 
-[![arXiv](https://img.shields.io/badge/arXiv-2606.27806-b31b1b.svg)](https://arxiv.org/abs/2606.27806)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB.svg)](requirements.txt)
-
-Research code and paper artifacts for studying how language-agent world models
-and parametric world models fail, complement each other, and can be combined.
-
-</div>
+<p align="center">
+  Research code and paper artifacts for studying how language-agent world models
+  and parametric world models fail, complement each other, and can be combined.
+</p>
 
 ---
 
