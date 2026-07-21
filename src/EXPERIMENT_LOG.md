@@ -60,7 +60,7 @@ src/
 1. **ObjectStateWorld 任务无解**: 初版钥匙随机放置可能导致 key 在它自己锁的门后. 修复: 按 door 顺序处理, 把 locked door 所需 key 放到 from-room 之前的某 room.
 2. **Oracle planner BFS bug**: BFS 用 `can_pass()` (含 inventory 检查) 通过了锁定门, 但 `move_to` 实际执行时门没解锁就 fail. 修复: 下一跳门若锁定且持有 key → 先 `unlock(door)` 再 move.
 3. **`_apply_mutation` 必须用 self._rng**: 测试 anchor_3 时确认 mutation 不引入额外随机源.
-4. **anthropic SDK 0.86 接受 `api_key="dummy"` + `base_url`**: 经测试与 OpenClaw proxy 兼容, 无需写 OAuth token 入参.
+4. **anthropic SDK 0.86 接受 `api_key="dummy"` + `base_url`**: 经测试与 OpenAI-compatible proxy 兼容, 无需写 OAuth token 入参.
 
 ### 已知 limitation
 - `envprobe_judge` 每步多 1 次 LLM call (cost ~2x), smoke 暂不测试.

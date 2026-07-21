@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>Xinyuan Song, Zekun Cai</strong>
+  <strong>Anonymous Authors</strong>
 </p>
 
 <p align="center">
@@ -253,7 +253,7 @@ If you use this code or figure, please cite:
 ```bibtex
 @misc{song2026groundediterativelanguageplanning,
       title={Grounded Iterative Language Planning: How Parameterized World Models Reduce Hallucination Propagation in LLM Agents}, 
-      author={Xinyuan Song and Zekun Cai},
+      author={Anonymous Authors},
       year={2026},
       eprint={2606.27806},
       archivePrefix={arXiv},
