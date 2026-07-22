@@ -3,7 +3,7 @@
 ## 2026-05-27 JST | anchor_1+2+3+4 实施日志
 
 ### 架构决策
-- **3 个 env 完全独立**: 不 import worldmodelphase, 也不 import `_draft_claude_code/`
+- **3 个 env 完全独立**: 不 import worldmodelphase, 也不 import legacy draft code
 - **确定性**: 所有随机源来自 `self._rng = random.Random(seed)`; obs noise / mutation 也用该 rng
 - **Probe budget**: 硬约束 `horizon // 4`, 超额时 method 强制 force-act (用 fallback heuristic 或 agent 已给的 act)
 - **LLM client 统一接口**:
